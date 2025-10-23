@@ -1,10 +1,8 @@
-const https = require('https');
-const querystring = require('querystring');
+import https from 'https';
+import querystring from 'querystring';
 
 // Environment variables
-const VAPI_API_KEY = process.env.VAPI_API_KEY;
-const VAPI_ASSISTANT_ID = process.env.VAPI_ASSISTANT_ID;
-const VAPI_PHONE_NUMBER_ID = process.env.VAPI_PHONE_NUMBER_ID;
+const { VAPI_API_KEY, VAPI_ASSISTANT_ID, VAPI_PHONE_NUMBER_ID } = process.env;
 
 // Helper functions
 function toE164(num, defaultCountry = "+91") {
@@ -113,10 +111,9 @@ function corsHeaders() {
   };
 }
 
-export default async (req, res) => {
+export default async function handler(req, res) {
   console.log(`Vercel request: ${req.method} ${req.url}`);
   
-  // CORS preflight
   if (req.method === 'OPTIONS') {
     res.status(204).setHeader(corsHeaders()).end();
     return;
@@ -162,7 +159,6 @@ export default async (req, res) => {
       return;
     }
     
-    // Test API connectivity first
     if (!(await testVapiConnectivity())) {
       res.status(502)
         .setHeader({
@@ -195,4 +191,4 @@ export default async (req, res) => {
   }
   
   res.status(405).setHeader(corsHeaders()).send('Method Not Allowed');
-};
+}
