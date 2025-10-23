@@ -46,7 +46,7 @@ async function testVapiConnectivity() {
 
   try {
     const response = await makeHttpsRequest(
-      `https://api.vapi.ai/assistants/${VAPI_ASSISTANT_ID}`,
+      `https://api.vapi.ai/assistant/${VAPI_ASSISTANT_ID}`,
       {
         method: "GET",
         headers: {
