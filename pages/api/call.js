@@ -39,18 +39,23 @@ function makeHttpsRequest(url, options) {
   });
 }
 
+// ---------- API Connectivity Test ----------
+
 async function testVapiConnectivity() {
   console.log("Testing Vapi API connectivity...");
 
   try {
-    const response = await makeHttpsRequest("https://api.vapi.ai/assistant", {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${VAPI_API_KEY}`,
-        Accept: "application/json",
-        "User-Agent": "Vercel-Node/18.x",
-      },
-    });
+    const response = await makeHttpsRequest(
+      `https://api.vapi.ai/assistants/${VAPI_ASSISTANT_ID}`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${VAPI_API_KEY}`,
+          Accept: "application/json",
+          "User-Agent": "Vercel-Node/18.x",
+        },
+      }
+    );
 
     console.log(`Assistant endpoint test - Status: ${response.status}`);
     return response.status === 200;
@@ -60,18 +65,20 @@ async function testVapiConnectivity() {
   }
 }
 
+// ---------- Create Call ----------
+
 async function startVapiCall(firstName, company, phoneE164) {
   console.log(`Making Vapi call: ${firstName} at ${company} - ${phoneE164}`);
 
   const payload = {
     assistantId: VAPI_ASSISTANT_ID,
     phoneNumberId: VAPI_PHONE_NUMBER_ID,
-    customer: { number: phoneE164, name: firstName },
-    assistantOverrides: {
-      variableValues: {
-        company_name: company,
-        first_name: firstName,
-      },
+    customer: {
+      number: phoneE164,
+      name: firstName || "Unknown",
+    },
+    metadata: {
+      company_name: company,
     },
   };
 
@@ -82,13 +89,12 @@ async function startVapiCall(firstName, company, phoneE164) {
     "Content-Type": "application/json",
     Accept: "application/json",
     "User-Agent": "Vercel-Node/18.x",
-    "X-Requested-With": "XMLHttpRequest",
   };
 
-  console.log(`Request payload: ${data}`);
+  console.log("Request payload:", data);
 
   try {
-    const response = await makeHttpsRequest("https://api.vapi.ai/call", {
+    const response = await makeHttpsRequest("https://api.vapi.ai/calls", {
       method: "POST",
       headers,
       data,
@@ -97,12 +103,14 @@ async function startVapiCall(firstName, company, phoneE164) {
     console.log(`Vapi response status: ${response.status}`);
     console.log(`Vapi response body: ${JSON.stringify(response.data)}`);
 
-    return { success: true, data: response.data };
+    return { success: response.status < 400, data: response.data };
   } catch (error) {
     console.log(`Vapi error: ${error.message}`);
     return { success: false, error: error.message };
   }
 }
+
+// ---------- CORS + Headers ----------
 
 function corsHeaders() {
   return {
@@ -112,14 +120,13 @@ function corsHeaders() {
   };
 }
 
-// New helper to safely apply multiple headers
 function applyHeaders(res, headers) {
   for (const [key, value] of Object.entries(headers)) {
     res.setHeader(key, value);
   }
 }
 
-// ---------- Main handler ----------
+// ---------- Main Handler ----------
 
 export default async function handler(req, res) {
   console.log(`Vercel request: ${req.method} ${req.url}`);
@@ -140,7 +147,7 @@ export default async function handler(req, res) {
     return;
   }
 
-  // POST → start a call
+  // POST → start call
   if (req.method === "POST") {
     const contentType = (req.headers["content-type"] || "").toLowerCase();
     let body = req.body;
