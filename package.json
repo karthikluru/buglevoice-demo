@@ -1,0 +1,19 @@
+{
+  "name": "luru-bugle-ai",
+  "version": "1.0.0",
+  "description": "Talk to Bugle AI - Vapi integration",
+  "main": "api/index.js",
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "echo 'No build step required'",
+    "start": "node api/index.js"
+  },
+  "dependencies": {
+    "@vercel/node": "^3.0.0"
+  },
+  "engines": {
+    "node": "18.x"
+  },
+  "type": "module"
+}
+

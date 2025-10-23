@@ -1,0 +1,19 @@
+{
+  "functions": {
+    "api/index.js": {
+      "maxDuration": 30
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/api/index.js"
+    }
+  ],
+  "env": {
+    "VAPI_API_KEY": "@vapi_api_key",
+    "VAPI_ASSISTANT_ID": "@vapi_assistant_id", 
+    "VAPI_PHONE_NUMBER_ID": "@vapi_phone_number_id"
+  }
+}
+
