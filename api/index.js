@@ -3,9 +3,9 @@ import https from 'https';
 import querystring from 'querystring';
 
 // Environment variables
-const VAPI_API_KEY = process.env.VAPI_API_KEY || "515ea128-6cba-4655-aae0-4d6199251c7a";
-const VAPI_ASSISTANT_ID = process.env.VAPI_ASSISTANT_ID || "45bb15ee-8850-4675-9b95-9e235ebcbb91";
-const VAPI_PHONE_NUMBER_ID = process.env.VAPI_PHONE_NUMBER_ID || "0cd865a1-41ad-4023-a936-cbe45e356126";
+const VAPI_API_KEY = process.env.VAPI_API_KEY ;
+const VAPI_ASSISTANT_ID = process.env.VAPI_ASSISTANT_ID;
+const VAPI_PHONE_NUMBER_ID = process.env.VAPI_PHONE_NUMBER_ID;
 
 // HTML content
 const HTML = `<!doctype html>
