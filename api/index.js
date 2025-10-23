@@ -261,15 +261,25 @@ export default async function handler(req, res) {
     res.status(200)
       .setHeader({
         ...corsHeaders(),
-        'content-type': 'text/html; charset=utf-8',
-        'cache-control': 'no-store'
+        'content-type': 'application/json'
       })
-      .send(HTML);
+      .json({ ok: true });
     return;
   }
   
   if (req.method === 'POST') {
-    const { first_name, company, phone } = req.body;
+    const contentType = (req.headers['content-type'] || '').toLowerCase();
+    let body = req.body;
+    if (typeof body === 'string') {
+      try {
+        if (contentType.includes('application/json')) body = JSON.parse(body);
+        else if (contentType.includes('application/x-www-form-urlencoded')) body = querystring.parse(body);
+        else body = JSON.parse(body);
+      } catch {
+        try { body = querystring.parse(body); } catch { body = {}; }
+      }
+    }
+    const { first_name, company, phone } = body || {};
     const firstName = (first_name || '').trim();
     const companyName = (company || '').trim();
     const phoneRaw = (phone || '').trim();
