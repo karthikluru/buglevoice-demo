@@ -169,14 +169,14 @@ export default async function handler(req, res) {
       }
     }
 
-    const { first_name, company, phone } = body || {};
+    const { first_name, company_name, phone } = body || {};
     const firstName = (first_name || "").trim();
-    const companyName = (company || "").trim();
+    const companyName = (company_name || "").trim();
     const phoneRaw = (phone || "").trim();
     const phoneE164 = toE164(phoneRaw);
 
     console.log(
-      `Form data: first_name=${firstName}, company=${companyName}, phone_raw=${phoneRaw}, phone_e164=${phoneE164}`
+      `Form data: first_name=${firstName}, company_name=${companyName}, phone_raw=${phoneRaw}, phone_e164=${phoneE164}`
     );
 
     if (!firstName || !companyName || !phoneE164) {
