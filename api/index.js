@@ -1,6 +1,6 @@
 // Vercel API route handler - converted from AWS Lambda
-const https = require('https');
-const querystring = require('querystring');
+import https from 'https';
+import querystring from 'querystring';
 
 // Environment variables
 const VAPI_API_KEY = process.env.VAPI_API_KEY || "515ea128-6cba-4655-aae0-4d6199251c7a";
