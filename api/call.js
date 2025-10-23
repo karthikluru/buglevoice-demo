@@ -113,7 +113,7 @@ function corsHeaders() {
   };
 }
 
-module.exports = async (req, res) => {
+export default async (req, res) => {
   console.log(`Vercel request: ${req.method} ${req.url}`);
   
   // CORS preflight
