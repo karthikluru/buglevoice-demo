@@ -77,6 +77,7 @@ async function startVapiCall(firstName, company, phoneE164) {
       number: phoneE164,
       name: firstName || "Unknown",
     },
+    // Optional — for tracking context
     metadata: {
       company_name: company,
     },
@@ -94,7 +95,8 @@ async function startVapiCall(firstName, company, phoneE164) {
   console.log("Request payload:", data);
 
   try {
-    const response = await makeHttpsRequest("https://api.vapi.ai/calls", {
+    // ✅ Use correct endpoint (singular)
+    const response = await makeHttpsRequest("https://api.vapi.ai/call", {
       method: "POST",
       headers,
       data,
