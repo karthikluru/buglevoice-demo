@@ -14,7 +14,7 @@ form.addEventListener('submit', async (e) => {
   const fd = new FormData(form);
   const payload = Object.fromEntries(fd.entries());
   try {
-    const res = await fetch('/api/index.js', {
+    const res = await fetch('/api/call', {
       method: 'POST',
       headers: { 'content-type':'application/json' },
       body: JSON.stringify(payload)
