@@ -77,9 +77,11 @@ async function startVapiCall(firstName, company, phoneE164) {
       number: phoneE164,
       name: firstName || "Unknown",
     },
-    // Optional — for tracking context
-    metadata: {
-      company_name: company,
+    assistantOverrides: {
+      variableValues: {
+        company_name: company,
+        first_name: firstName,
+      }
     },
   };
 
