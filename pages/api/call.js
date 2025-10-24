@@ -171,15 +171,35 @@ export default async function handler(req, res) {
       }
     }
 
-    const { first_name, company_name, phone } = body || {};
+    const { first_name, company_name, phone, utm_source, utm_medium, utm_campaign, utm_content, utm_term, referrer } = body || {};
     const firstName = (first_name || "").trim();
     const companyName = (company_name || "").trim();
     const phoneRaw = (phone || "").trim();
     const phoneE164 = toE164(phoneRaw);
 
-    console.log(
-      `Form data: first_name=${firstName}, company_name=${companyName}, phone_raw=${phoneRaw}, phone_e164=${phoneE164}`
-    );
+    // Comprehensive logging for form submission
+    console.log('=== API CALL RECEIVED ===');
+    console.log('Timestamp:', new Date().toISOString());
+    console.log('Request Headers:', {
+      'user-agent': req.headers['user-agent'],
+      'referer': req.headers.referer,
+      'origin': req.headers.origin,
+      'x-forwarded-for': req.headers['x-forwarded-for']
+    });
+    console.log('Form Data:', {
+      first_name: firstName,
+      company_name: companyName,
+      phone_raw: phoneRaw,
+      phone_e164: phoneE164,
+      utm_source: utm_source || 'N/A',
+      utm_medium: utm_medium || 'N/A',
+      utm_campaign: utm_campaign || 'N/A',
+      utm_content: utm_content || 'N/A',
+      utm_term: utm_term || 'N/A',
+      referrer: referrer || 'N/A'
+    });
+    console.log('Full Request Body:', JSON.stringify(body, null, 2));
+    console.log('=== API CALL PROCESSING ===');
 
     if (!firstName || !companyName || !phoneE164) {
       res.status(400);
@@ -203,8 +223,11 @@ export default async function handler(req, res) {
     }
 
     // Start the call
+    console.log('Starting Vapi call...');
     const result = await startVapiCall(firstName, companyName, phoneE164);
+    
     if (!result.success) {
+      console.error('❌ Vapi call failed:', result);
       res.status(502);
       applyHeaders(res, {
         ...corsHeaders(),
@@ -217,13 +240,16 @@ export default async function handler(req, res) {
             "We couldn't start the call right now. Please try again shortly.",
         })
       );
+      console.log('=== API CALL FAILED ===');
       return;
     }
 
     const callId = result.data?.id || null;
+    console.log('✅ Vapi call started successfully:', { callId, result });
     res.status(200);
     applyHeaders(res, { ...corsHeaders(), "content-type": "application/json" });
     res.end(JSON.stringify({ ok: true, callId }));
+    console.log('=== API CALL SUCCESS ===');
     return;
   }
 
