@@ -13,6 +13,18 @@ form.addEventListener('submit', async (e) => {
   e.preventDefault(); ok.style.display='none'; err.style.display='none';
   const fd = new FormData(form);
   const payload = Object.fromEntries(fd.entries());
+  
+  // Combine country code and phone number
+  const countryCode = payload.country_code;
+  const phoneNumber = payload.phone_number;
+  if (countryCode && phoneNumber) {
+    payload.phone = countryCode + phoneNumber;
+  }
+  
+  // Remove the separate fields as we now have combined phone
+  delete payload.country_code;
+  delete payload.phone_number;
+  
   try {
     const res = await fetch('/api/call', {
       method: 'POST',
