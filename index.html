@@ -31,6 +31,16 @@
     input::placeholder{color:#818191}
     .phone-container{display:grid;grid-template-columns:140px 1fr;gap:12px;align-items:start}
     .country-code-container{position:relative}
+    .searchable-dropdown{position:relative;width:100%}
+    .country-search-input{width:100%;padding:12px 14px;padding-right:40px;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:#0f0f16;color:var(--text);cursor:pointer}
+    .country-search-input::placeholder{color:#818191}
+    .dropdown-arrow{position:absolute;right:12px;top:50%;transform:translateY(-50%);color:#6b7280;pointer-events:none;font-size:12px}
+    .dropdown-options{position:absolute;top:100%;left:0;right:0;background:#0f0f16;border:1px solid rgba(255,255,255,.12);border-radius:10px;max-height:200px;overflow-y:auto;z-index:1000;display:none;margin-top:4px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+    .dropdown-option{padding:12px 14px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.05);color:var(--text);display:flex;align-items:center;gap:8px}
+    .dropdown-option:hover{background:rgba(255,255,255,.05)}
+    .dropdown-option:last-child{border-bottom:none}
+    .dropdown-option.selected{background:rgba(124,92,255,.2)}
+    .country-flag{font-size:16px}
     .country-code-select{appearance:none;background-image:url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");background-position:right 12px center;background-repeat:no-repeat;background-size:16px;padding-right:40px;cursor:pointer}
     .phone-number-input{flex:1}
     @media (max-width:768px){
@@ -93,9 +103,16 @@
         </div>
         <div class="phone-container">
           <div class="country-code-container">
-            <select required name="country_code" id="country-code" class="country-code-select">
-              <option value="">Select Country</option>
-            </select>
+            <div class="searchable-dropdown">
+              <input type="text" id="country-search" placeholder="Search country..." class="country-search-input" autocomplete="off" />
+              <div class="dropdown-arrow">▼</div>
+              <div class="dropdown-options" id="country-options">
+                <!-- Options will be populated by JavaScript -->
+              </div>
+              <select required name="country_code" id="country-code" class="country-code-select" style="display: none;">
+                <option value="">Select Country</option>
+              </select>
+            </div>
           </div>
           <input required name="phone_number" type="tel" placeholder="Phone number" class="phone-number-input" />
         </div>
@@ -221,20 +238,143 @@
       { code: "+1", country: "Bermuda", flag: "🇧🇲" }
     ];
 
+    // Global variables for searchable dropdown
+    let filteredCountries = [...countryCodes];
+    let selectedCountry = null;
+
     // Populate country code dropdown
     function populateCountryCodes() {
       const select = document.getElementById('country-code');
+      const optionsContainer = document.getElementById('country-options');
+      
+      // Populate hidden select for form submission
       countryCodes.forEach(country => {
         const option = document.createElement('option');
         option.value = country.code;
         option.textContent = `${country.flag} ${country.code} ${country.country}`;
         select.appendChild(option);
       });
+      
+      // Populate visible dropdown options
+      renderOptions();
+    }
+
+    // Render filtered options
+    function renderOptions() {
+      const optionsContainer = document.getElementById('country-options');
+      optionsContainer.innerHTML = '';
+      
+      filteredCountries.forEach(country => {
+        const option = document.createElement('div');
+        option.className = 'dropdown-option';
+        option.innerHTML = `
+          <span class="country-flag">${country.flag}</span>
+          <span class="country-code">${country.code}</span>
+          <span class="country-name">${country.country}</span>
+        `;
+        option.addEventListener('click', () => selectCountry(country));
+        optionsContainer.appendChild(option);
+      });
+    }
+
+    // Select a country
+    function selectCountry(country) {
+      selectedCountry = country;
+      const searchInput = document.getElementById('country-search');
+      const select = document.getElementById('country-code');
+      
+      // Update search input display
+      searchInput.value = `${country.flag} ${country.code} ${country.country}`;
+      
+      // Update hidden select value
+      select.value = country.code;
+      
+      // Hide dropdown
+      document.getElementById('country-options').style.display = 'none';
+      
+      // Update selected option styling
+      document.querySelectorAll('.dropdown-option').forEach(opt => opt.classList.remove('selected'));
+      event.target.closest('.dropdown-option').classList.add('selected');
+    }
+
+    // Filter countries based on search
+    function filterCountries(searchTerm) {
+      const term = searchTerm.toLowerCase();
+      filteredCountries = countryCodes.filter(country => 
+        country.country.toLowerCase().includes(term) ||
+        country.code.includes(term) ||
+        country.country.toLowerCase().startsWith(term)
+      );
+      renderOptions();
+    }
+
+    // Initialize searchable dropdown
+    function initializeSearchableDropdown() {
+      const searchInput = document.getElementById('country-search');
+      const optionsContainer = document.getElementById('country-options');
+      
+      // Show dropdown on focus
+      searchInput.addEventListener('focus', () => {
+        optionsContainer.style.display = 'block';
+        filteredCountries = [...countryCodes];
+        renderOptions();
+      });
+      
+      // Hide dropdown when clicking outside
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('.searchable-dropdown')) {
+          optionsContainer.style.display = 'none';
+        }
+      });
+      
+      // Handle search input
+      searchInput.addEventListener('input', (e) => {
+        const searchTerm = e.target.value;
+        if (searchTerm.length > 0) {
+          filterCountries(searchTerm);
+          optionsContainer.style.display = 'block';
+        } else {
+          filteredCountries = [...countryCodes];
+          renderOptions();
+        }
+      });
+      
+      // Handle keyboard navigation
+      searchInput.addEventListener('keydown', (e) => {
+        const options = document.querySelectorAll('.dropdown-option');
+        const selected = document.querySelector('.dropdown-option.selected');
+        let selectedIndex = -1;
+        
+        if (selected) {
+          selectedIndex = Array.from(options).indexOf(selected);
+        }
+        
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          const nextIndex = Math.min(selectedIndex + 1, options.length - 1);
+          options[selectedIndex]?.classList.remove('selected');
+          options[nextIndex]?.classList.add('selected');
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          const prevIndex = Math.max(selectedIndex - 1, 0);
+          options[selectedIndex]?.classList.remove('selected');
+          options[prevIndex]?.classList.add('selected');
+        } else if (e.key === 'Enter') {
+          e.preventDefault();
+          if (selected) {
+            selected.click();
+          }
+        } else if (e.key === 'Escape') {
+          optionsContainer.style.display = 'none';
+          searchInput.blur();
+        }
+      });
     }
 
     // Initialize on page load
     document.addEventListener('DOMContentLoaded', function() {
       populateCountryCodes();
+      initializeSearchableDropdown();
     });
   </script>
   <script src="/script.js"></script>

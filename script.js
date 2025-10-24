@@ -19,6 +19,9 @@ form.addEventListener('submit', async (e) => {
   const phoneNumber = payload.phone_number;
   if (countryCode && phoneNumber) {
     payload.phone = countryCode + phoneNumber;
+    console.log(`Combined phone number: ${countryCode} + ${phoneNumber} = ${payload.phone}`);
+  } else {
+    console.warn('Missing country code or phone number:', { countryCode, phoneNumber });
   }
   
   // Remove the separate fields as we now have combined phone
