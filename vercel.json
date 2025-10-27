@@ -2,11 +2,13 @@
   "version": 2,
   "builds": [
     { "src": "index.html", "use": "@vercel/static" },
+    { "src": "internal.html", "use": "@vercel/static" },
     { "src": "script.js", "use": "@vercel/static" },
     { "src": "pages/api/**/*.js", "use": "@vercel/node" }
   ],
   "routes": [
     { "src": "/api/(.*)", "dest": "/pages/api/$1.js" },
+    { "src": "/internal", "dest": "/internal.html" },
     { "src": "/(.*\\.(js|css|png|jpg|jpeg|svg|ico))", "dest": "/$1" },
     { "src": "/(.*)", "dest": "/index.html" }
   ]

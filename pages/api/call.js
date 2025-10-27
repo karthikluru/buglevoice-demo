@@ -41,12 +41,12 @@ function makeHttpsRequest(url, options) {
 
 // ---------- API Connectivity Test ----------
 
-async function testVapiConnectivity() {
-  console.log("Testing Vapi API connectivity...");
+async function testVapiConnectivity(assistantId = VAPI_ASSISTANT_ID) {
+  console.log(`Testing Vapi API connectivity for Assistant ID: ${assistantId}...`);
 
   try {
     const response = await makeHttpsRequest(
-      `https://api.vapi.ai/assistant/${VAPI_ASSISTANT_ID}`,
+      `https://api.vapi.ai/assistant/${assistantId}`,
       {
         method: "GET",
         headers: {
@@ -67,11 +67,15 @@ async function testVapiConnectivity() {
 
 // ---------- Create Call ----------
 
-async function startVapiCall(firstName, company, phoneE164) {
+async function startVapiCall(firstName, company, phoneE164, assistantIdOverride = null) {
+  const effectiveAssistantId = assistantIdOverride || VAPI_ASSISTANT_ID;
   console.log(`Making Vapi call: ${firstName} at ${company} - ${phoneE164}`);
+  if (assistantIdOverride) {
+    console.log(`📞 Using custom Assistant ID: ${assistantIdOverride}`);
+  }
 
   const payload = {
-    assistantId: VAPI_ASSISTANT_ID,
+    assistantId: effectiveAssistantId,
     phoneNumberId: VAPI_PHONE_NUMBER_ID,
     customer: {
       number: phoneE164,
@@ -171,11 +175,20 @@ export default async function handler(req, res) {
       }
     }
 
-    const { first_name, company_name, phone, utm_source, utm_medium, utm_campaign, utm_content, utm_term, referrer } = body || {};
+    const { first_name, company_name, phone, utm_source, utm_medium, utm_campaign, utm_content, utm_term, referrer, assistant_id } = body || {};
     const firstName = (first_name || "").trim();
     const companyName = (company_name || "").trim();
     const phoneRaw = (phone || "").trim();
     const phoneE164 = toE164(phoneRaw);
+    
+    // Handle Assistant ID override
+    const assistantIdOverride = (assistant_id || "").trim();
+    const effectiveAssistantId = assistantIdOverride || VAPI_ASSISTANT_ID;
+    
+    if (assistantIdOverride) {
+      console.log(`🔄 Using custom Assistant ID override: ${assistantIdOverride}`);
+      console.log(`📋 Default Assistant ID would have been: ${VAPI_ASSISTANT_ID}`);
+    }
 
     // Comprehensive logging for form submission
     console.log('=== API CALL RECEIVED ===');
@@ -191,6 +204,8 @@ export default async function handler(req, res) {
       company_name: companyName,
       phone_raw: phoneRaw,
       phone_e164: phoneE164,
+      assistant_id: assistantIdOverride || 'Using default',
+      effective_assistant_id: effectiveAssistantId,
       utm_source: utm_source || 'N/A',
       utm_medium: utm_medium || 'N/A',
       utm_campaign: utm_campaign || 'N/A',
@@ -212,19 +227,24 @@ export default async function handler(req, res) {
     }
 
     // Test API connectivity
-    if (!(await testVapiConnectivity())) {
-      res.status(502);
-      applyHeaders(res, {
-        ...corsHeaders(),
-        "content-type": "application/json",
-      });
-      res.end(JSON.stringify({ ok: false, message: "API connectivity test failed" }));
-      return;
+    // Skip connectivity test if using custom Assistant ID (may not exist)
+    if (!assistantIdOverride) {
+      if (!(await testVapiConnectivity())) {
+        res.status(502);
+        applyHeaders(res, {
+          ...corsHeaders(),
+          "content-type": "application/json",
+        });
+        res.end(JSON.stringify({ ok: false, message: "API connectivity test failed" }));
+        return;
+      }
+    } else {
+      console.log(`⏭️ Skipping connectivity test for custom Assistant ID: ${assistantIdOverride}`);
     }
 
     // Start the call
     console.log('Starting Vapi call...');
-    const result = await startVapiCall(firstName, companyName, phoneE164);
+    const result = await startVapiCall(firstName, companyName, phoneE164, effectiveAssistantId);
     
     if (!result.success) {
       console.error('❌ Vapi call failed:', result);
